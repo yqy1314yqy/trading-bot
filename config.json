@@ -1,0 +1,25 @@
+{
+    "exchange": {
+        "key": "",
+        "secret": "",
+        "pair_whitelist": [
+            "BTC/USDT:USDT",
+            "ETH/USDT:USDT",
+            "BNB/USDT:USDT",
+            "SOL/USDT:USDT"
+        ],
+        "ccxt_config": {
+            "proxies": {
+                "http": "",
+                "https": ""
+            }
+        },
+        "ccxt_async_config": {
+            "proxies": {
+                "http": "",
+                "https": ""
+            }
+        }
+    },
+    "dry_run": true
+}

@@ -1,0 +1,25 @@
+[app]
+title = 量化交易机器人
+package.name = tradingbot
+package.domain = com.cryptobot
+source.dir = .
+source.include_exts = py,png,jpg,kv,json
+version = 1.0.0
+requirements = python3,kivy,ccxt,numpy,requests,pillow
+orientation = portrait
+osx.python_version = 3
+osx.kivy_version = 2.3.0
+fullscreen = 0
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,RECEIVE_BOOT_COMPLETED
+android.api = 33
+android.minapi = 26
+android.ndk = 25b
+android.gradle_dependencies =
+android.arch = arm64-v8a
+android.allow_backup = True
+android.presplash_color = #F2F2F7
+android.splash_color = #F2F2F7
+ios.kivy_ios_url = https://github.com/kivy/kivy-ios
+ios.kivy_ios_branch = master
+ios.ios_deploy_version = 15
+ios.ios_minimum_version = 15
