@@ -6,36 +6,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip python3-dev build-essential git \
-            autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
-            libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
-            openjdk-17-jdk-headless unzip zip
-          pip install --upgrade pip
-          pip install buildozer cython virtualenv
-
-      - name: Verify files
-        run: |
-          echo "=== Files ==="
-          ls -la
-          echo "=== Buildozer spec ==="
-          cat buildozer.spec
-          echo "=== Python files ==="
-          ls -la *.py
-
-      - name: Build APK
-        run: buildozer android debug
-        timeout-minutes: 50
+      - name: Build APK with Buildozer
+        uses: digreatbrian/buildozer-action@v2
+        with:
+          python-version: "3.11"
+          buildozer-cmd: buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: trading-bot-apk
-          path: "*.apk"
+          path: ./bin/*.apk
           retention-days: 30

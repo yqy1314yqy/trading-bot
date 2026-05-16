@@ -16,6 +16,7 @@ android.minapi = 26
 android.ndk = 25b
 android.gradle_dependencies =
 android.arch = arm64-v8a
+android.accept_sdk_license = True
 android.allow_backup = True
 android.presplash_color = #F2F2F7
 android.splash_color = #F2F2F7
