@@ -15,12 +15,6 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Cache Buildozer
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-
       - name: Install system dependencies
         run: |
           sudo apt update
@@ -36,18 +30,32 @@ jobs:
           pip install Cython==0.29.33
           pip install buildozer
 
-      - name: Build APK
+      - name: Build APK (with log capture)
+        id: build
+        continue-on-error: true
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
           PYTHONFORANDROID_PREREQUISITES_INSTALL_INTERACTIVE: "0"
           BUILDOZER_ALLOW_ORG_TEST_DOMAIN: "1"
         run: |
           export PATH=$HOME/.local/bin:$PATH
-          buildozer -v android debug
+          buildozer -v android debug 2>&1 | tee buildozer.log
+          echo "EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
-      - name: Upload APK
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer.log
+          retention-days: 7
+
+      - name: Upload APK (if built)
         uses: actions/upload-artifact@v4
         with:
           name: trading-bot-apk
           path: ./bin/*.apk
           retention-days: 30
+
+      - name: Fail if build failed
+        if: steps.build.outputs.EXIT_CODE != '0'
+        run: exit 1
