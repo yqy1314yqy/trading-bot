@@ -10,30 +10,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Buildozer dependencies
+      - name: Setup dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential git python3-pip python3-dev \
-            openjdk-17-jdk-headless autoconf libtool \
-            libffi-dev libssl-dev zlib1g-dev libncurses5-dev \
-            libncursesw5-dev libtinfo5 cmake libltdl-dev \
-            libbz2-dev libreadline-dev libsqlite3-dev \
-            unzip zip
-          pip install buildozer Cython
+          sudo apt update
+          sudo apt install -y python3-pip python3-dev build-essential git \
+            autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
+            libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
+            openjdk-17-jdk-headless unzip zip
+          pip install --upgrade pip
+          pip install buildozer cython virtualenv
+
+      - name: Verify files
+        run: |
+          echo "=== Files ==="
+          ls -la
+          echo "=== Buildozer spec ==="
+          cat buildozer.spec
+          echo "=== Python files ==="
+          ls -la *.py
 
       - name: Build APK
-        working-directory: .
         run: buildozer android debug
-        timeout-minutes: 60
+        timeout-minutes: 50
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: trading-bot
+          name: trading-bot-apk
           path: "*.apk"
+          retention-days: 30
