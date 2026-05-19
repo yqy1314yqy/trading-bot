@@ -5,7 +5,7 @@ package.domain = com.cryptobot
 source.dir = .
 source.include_exts = py,png,jpg,kv,json
 version = 1.0.0
-requirements = hostpython3==3.12.8,python3==3.12.8,kivy,ccxt,numpy,requests,Pillow,certifi
+requirements = hostpython3==3.11.8,python3==3.11.8,kivy,ccxt,numpy,requests,Pillow,certifi
 orientation = portrait
 osx.python_version = 3
 osx.kivy_version = 2.3.0
