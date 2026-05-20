@@ -279,11 +279,16 @@ class TradingEngine:
             self.state["start_balance"] = self.state["balance"]
             self.log(f"初始余额: {self.state['balance']:.2f} USDT")
         except Exception as e:
-            self.log(f"交易所初始化失败: {e}")
-            self.state["status"] = "error"
-            return
+            self.log(f"交易所连接失败 (使用模拟数据): {str(e)[:60]}")
+            self.state["balance"] = sim_balance
+            self.state["start_balance"] = sim_balance
+            self.exchange = None
 
         while self.running:
+            if self.exchange is None:
+                self.state["status"] = "offline"
+                time.sleep(5)
+                continue
             try:
                 positions = self.get_open_positions()
                 open_pairs = set()
