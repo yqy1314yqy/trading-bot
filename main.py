@@ -190,6 +190,16 @@ class DashboardScreen(Screen):
         self.add_widget(self.layout)
 
     def update(self, state):
+        if state.get("status") == "error":
+            self.balance_label.text = "请先设置 API"
+            self.pl_label.text = "在设置页填写币安 API Key 和 Secret"
+            self.pl_label.color = gc(C_RED)
+            self.pairs_label.text = "--"
+            self.winrate_box.set_value("--")
+            self.trades_box.set_value("--")
+            self.open_box.set_value("--")
+            self.trades_list.clear_widgets()
+            return
         bal = state.get("balance", 0)
         self.balance_label.text = f"{bal:,.2f} USDT"
         profit = state.get("profit_total", 0)
@@ -401,7 +411,6 @@ class LogsScreen(Screen):
         layout = BoxLayout(orientation="vertical", padding=dp(16))
         self.log_label = Label(
             text="暂无日志", font_size=dp(11),
-            font_name="DroidSansMono",
             color=gc(C_TEXT), valign="top", halign="left",
             size_hint_y=None
         )
@@ -483,7 +492,7 @@ class TradingBotApp(App):
             self.nav_rect = RoundedRectangle()
         nav.bind(pos=self._update_nav_bg, size=self._update_nav_bg)
 
-        for name, label in [("dashboard", "📊 仪表盘"), ("settings", "⚙️ 设置"), ("logs", "📋 日志")]:
+        for name, label in [("dashboard", "仪表盘"), ("settings", "设置"), ("logs", "日志")]:
             btn = Button(
                 text=label, font_size=dp(12), color=gc(C_ACCENT),
                 background_normal="", background_down="",

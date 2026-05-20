@@ -86,9 +86,15 @@ class TradingEngine:
 
     def init_exchange(self):
         cfg = self.load_config()
+        key = cfg["exchange"]["key"].strip()
+        secret = cfg["exchange"]["secret"].strip()
+
+        if not key or not secret:
+            raise ValueError("API Key 和 Secret 未设置，请在设置页面填写")
+
         params = {
-            "apiKey": cfg["exchange"]["key"],
-            "secret": cfg["exchange"]["secret"],
+            "apiKey": key,
+            "secret": secret,
             "enableRateLimit": True,
             "options": {"defaultType": "future"},
         }
