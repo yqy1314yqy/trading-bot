@@ -11,12 +11,14 @@ from kivy.utils import platform
 if platform == 'android':
     from kivy.config import Config
     import os
+    # Prefer bundled font, fall back to system CJK fonts
     _FONT_CANDIDATES = [
-        '/system/fonts/DroidSansFallbackBBK.ttf',  # vivo / BBK
-        '/system/fonts/NotoSansCJK-Regular.ttc',   # Samsung / generic
-        '/system/fonts/MiSans-Regular.ttf',        # Xiaomi
+        'font.ttc',                                   # bundled WenQuanYi Micro Hei
+        '/system/fonts/DroidSansFallbackBBK.ttf',      # vivo / BBK
+        '/system/fonts/NotoSansCJK-Regular.ttc',       # Samsung / generic
+        '/system/fonts/MiSans-Regular.ttf',            # Xiaomi
         '/system/fonts/HarmonyOS_Sans_SC_Regular.ttf',  # Huawei
-        '/system/fonts/DroidSansFallback.ttf',     # older Android
+        '/system/fonts/DroidSansFallback.ttf',         # older Android
     ]
     _font = next((f for f in _FONT_CANDIDATES if os.path.exists(f)), None)
     if _font:

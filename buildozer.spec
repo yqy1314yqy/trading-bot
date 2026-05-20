@@ -3,7 +3,7 @@ title = 量化交易机器人
 package.name = tradingbot
 package.domain = com.cryptobot
 source.dir = .
-source.include_exts = py,png,jpg,kv,json
+source.include_exts = py,png,jpg,kv,json,ttc
 version = 1.0.0
 requirements = hostpython3==3.11.8,python3==3.11.8,kivy,ccxt,numpy,requests,Pillow,certifi
 orientation = portrait
