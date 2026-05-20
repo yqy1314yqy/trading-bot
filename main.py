@@ -6,6 +6,15 @@ import json
 import threading
 from pathlib import Path
 
+from kivy.utils import platform
+
+if platform == 'android':
+    from kivy.config import Config
+    CJK_FONT = '/system/fonts/DroidSansFallbackBBK.ttf'
+    Config.set('kivy', 'default_font', [
+        'Roboto', CJK_FONT, CJK_FONT, CJK_FONT, CJK_FONT
+    ])
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
