@@ -267,11 +267,17 @@ class TradingEngine:
         cfg = self.load_config()
         pairs = cfg["exchange"]["pair_whitelist"]
 
+        sim_balance = float(cfg.get("sim_balance", 10000))
+
         try:
             self.init_exchange()
-            self.state["balance"] = self.fetch_balance()
+            bal = self.fetch_balance()
+            if bal > 0:
+                self.state["balance"] = bal
+            else:
+                self.state["balance"] = sim_balance
             self.state["start_balance"] = self.state["balance"]
-            self.log(f"账户余额: {self.state['balance']:.2f} USDT")
+            self.log(f"初始余额: {self.state['balance']:.2f} USDT")
         except Exception as e:
             self.log(f"交易所初始化失败: {e}")
             self.state["status"] = "error"

@@ -421,63 +421,81 @@ class LogsScreen(Screen):
 class SimulationScreen(Screen):
     def __init__(self, **kw):
         super().__init__(name="simulation", **kw)
-        layout = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(14))
+        scroll = ScrollView()
+        layout = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(12), size_hint_y=None)
+        layout.bind(minimum_height=layout.setter("height"))
 
-        # Dry run
-        switch_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44))
-        switch_row.add_widget(Label(
-            text="模拟交易", font_size=dp(14), color=gc(C_TEXT)
-        ))
-        self.dry_switch = Switch(active=True)
-        switch_row.add_widget(self.dry_switch)
-        layout.add_widget(switch_row)
+        # Balance
+        bal_card = Card(size_hint_y=None, height=dp(110))
+        bal_card.add_widget(Label(text="模拟余额", font_size=dp(12), color=gc(C_TEXT2), size_hint_y=None, height=dp(20)))
+        self.balance_label = Label(text="--- USDT", font_size=dp(36), bold=True, color=gc(C_TEXT), size_hint_y=None, height=dp(46))
+        self.balance_label.bind(size=self.balance_label.setter("text_size"))
+        self.pl_label = Label(text="", font_size=dp(14), color=gc(C_TEXT2), size_hint_y=None, height=dp(22))
+        bal_card.add_widget(self.balance_label)
+        bal_card.add_widget(self.pl_label)
+        layout.add_widget(bal_card)
 
-        # Leverage
+        # Stats
+        stats = GridLayout(cols=3, spacing=dp(10), size_hint_y=None, height=dp(80))
+        self.winrate_box = StatBox("胜率")
+        self.trades_box = StatBox("总交易")
+        self.open_box = StatBox("当前持仓")
+        stats.add_widget(self.winrate_box)
+        stats.add_widget(self.trades_box)
+        stats.add_widget(self.open_box)
+        layout.add_widget(stats)
+
+        # Pairs
+        pairs_card = Card(size_hint_y=None, height=dp(60))
+        pairs_card.add_widget(Label(text="交易对", font_size=dp(12), color=gc(C_TEXT2), size_hint_y=None, height=dp(18)))
+        self.pairs_label = Label(text="--", font_size=dp(14), color=gc(C_ACCENT), size_hint_y=None, height=dp(24))
+        pairs_card.add_widget(self.pairs_label)
+        layout.add_widget(pairs_card)
+
+        # Initial balance
+        layout.add_widget(Label(text="初始金额 (USDT)", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
+        self.init_balance = TextInput(text="10000", multiline=False, size_hint_y=None, height=dp(46), background_color=gc(C_CARD), foreground_color=gc(C_TEXT), font_size=dp(14))
+        layout.add_widget(self.init_balance)
+
+        # Strategy
         layout.add_widget(Label(text="杠杆倍数", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
-        self.leverage = TextInput(
-            text=str(STRATEGY_PARAMS["leverage"]), multiline=False,
-            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
-            foreground_color=gc(C_TEXT), font_size=dp(14)
-        )
+        self.leverage = TextInput(text=str(STRATEGY_PARAMS["leverage"]), multiline=False, size_hint_y=None, height=dp(46), background_color=gc(C_CARD), foreground_color=gc(C_TEXT), font_size=dp(14))
         layout.add_widget(self.leverage)
 
-        # Max trades
         layout.add_widget(Label(text="最大同时持仓", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
-        self.max_trades = TextInput(
-            text=str(STRATEGY_PARAMS["max_trades"]), multiline=False,
-            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
-            foreground_color=gc(C_TEXT), font_size=dp(14)
-        )
+        self.max_trades = TextInput(text=str(STRATEGY_PARAMS["max_trades"]), multiline=False, size_hint_y=None, height=dp(46), background_color=gc(C_CARD), foreground_color=gc(C_TEXT), font_size=dp(14))
         layout.add_widget(self.max_trades)
 
-        # Stoploss
         layout.add_widget(Label(text="止损比例 (负数)", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
-        self.stoploss = TextInput(
-            text=str(STRATEGY_PARAMS["stoploss"]), multiline=False,
-            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
-            foreground_color=gc(C_TEXT), font_size=dp(14)
-        )
+        self.stoploss = TextInput(text=str(STRATEGY_PARAMS["stoploss"]), multiline=False, size_hint_y=None, height=dp(46), background_color=gc(C_CARD), foreground_color=gc(C_TEXT), font_size=dp(14))
         layout.add_widget(self.stoploss)
 
-        # Save
+        # Real trade toggle
+        switch_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44))
+        switch_row.add_widget(Label(text="真实下单 (关=只看不做)", font_size=dp(13), color=gc(C_TEXT)))
+        self.real_switch = Switch(active=False)
+        switch_row.add_widget(self.real_switch)
+        layout.add_widget(switch_row)
+
         save_btn = AppleButton(color=C_ACCENT, text="保存参数")
         save_btn.bind(on_release=lambda x: self.save())
         layout.add_widget(save_btn)
 
-        self.msg_label = Label(
-            text="", font_size=dp(13), size_hint_y=None, height=dp(40),
-            color=gc(C_TEXT2)
-        )
+        self.msg_label = Label(text="", font_size=dp(13), size_hint_y=None, height=dp(40), color=gc(C_TEXT2))
         layout.add_widget(self.msg_label)
-
         layout.add_widget(Label())
 
-        self.add_widget(layout)
+        scroll.add_widget(layout)
+        self.add_widget(scroll)
 
     def save(self):
         cfg = engine.load_config()
-        cfg["dry_run"] = self.dry_switch.active
+        cfg["dry_run"] = not self.real_switch.active
         try:
+            val = float(self.init_balance.text)
+            if val <= 0:
+                raise ValueError
+            cfg["sim_balance"] = val
             STRATEGY_PARAMS["leverage"] = float(self.leverage.text)
             STRATEGY_PARAMS["max_trades"] = int(self.max_trades.text)
             STRATEGY_PARAMS["stoploss"] = float(self.stoploss.text)
@@ -492,10 +510,29 @@ class SimulationScreen(Screen):
         self.msg_label.color = gc(C_GREEN)
         Clock.schedule_once(lambda dt: setattr(self.msg_label, 'text', ''), 3)
 
+    def update(self, state):
+        bal = state.get("balance", 0)
+        self.balance_label.text = f"{bal:,.2f} USDT"
+        profit = state.get("profit_total", 0)
+        pct = state.get("profit_pct", 0)
+        c = C_GREEN if profit >= 0 else C_RED
+        self.pl_label.text = f"{'+' if profit>=0 else ''}{profit:.2f} USDT ({'+' if pct>=0 else ''}{pct:.2f}%)"
+        self.pl_label.color = gc(c)
+        total = state.get("trades_total", 0)
+        wins = state.get("trades_win", 0)
+        wr = f"{wins/total*100:.0f}%" if total > 0 else "--"
+        self.winrate_box.set_value(wr)
+        self.trades_box.set_value(str(total))
+        self.open_box.set_value(str(len(state.get("open_positions", []))))
+        cfg = engine.load_config()
+        pairs = cfg.get("exchange", {}).get("pair_whitelist", [])
+        self.pairs_label.text = " / ".join(p.replace(":USDT", "") for p in pairs)
+
     def load(self):
         try:
             cfg = engine.load_config()
-            self.dry_switch.active = cfg.get("dry_run", True)
+            self.real_switch.active = not cfg.get("dry_run", True)
+            self.init_balance.text = str(cfg.get("sim_balance", 10000))
             self.leverage.text = str(STRATEGY_PARAMS.get("leverage", 2))
             self.max_trades.text = str(STRATEGY_PARAMS.get("max_trades", 3))
             self.stoploss.text = str(STRATEGY_PARAMS.get("stoploss", -0.045))
@@ -623,6 +660,7 @@ class TradingBotApp(App):
         ))
         if running:
             self.dashboard.update(state)
+            self.simulation.update(state)
         if self.sm.current == "logs":
             self.logs.update(state.get("logs", []))
 
