@@ -470,13 +470,6 @@ class SimulationScreen(Screen):
         self.stoploss = TextInput(text=str(STRATEGY_PARAMS["stoploss"]), multiline=False, size_hint_y=None, height=dp(46), background_color=gc(C_CARD), foreground_color=gc(C_TEXT), font_size=dp(14))
         layout.add_widget(self.stoploss)
 
-        # Real trade toggle
-        switch_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44))
-        switch_row.add_widget(Label(text="真实下单 (关=只看不做)", font_size=dp(13), color=gc(C_TEXT)))
-        self.real_switch = Switch(active=False)
-        switch_row.add_widget(self.real_switch)
-        layout.add_widget(switch_row)
-
         save_btn = AppleButton(color=C_ACCENT, text="保存参数")
         save_btn.bind(on_release=lambda x: self.save())
         layout.add_widget(save_btn)
@@ -490,7 +483,7 @@ class SimulationScreen(Screen):
 
     def save(self):
         cfg = engine.load_config()
-        cfg["dry_run"] = not self.real_switch.active
+        cfg["dry_run"] = True
         try:
             val = float(self.init_balance.text)
             if val <= 0:
@@ -531,7 +524,6 @@ class SimulationScreen(Screen):
     def load(self):
         try:
             cfg = engine.load_config()
-            self.real_switch.active = not cfg.get("dry_run", True)
             self.init_balance.text = str(cfg.get("sim_balance", 10000))
             self.leverage.text = str(STRATEGY_PARAMS.get("leverage", 2))
             self.max_trades.text = str(STRATEGY_PARAMS.get("max_trades", 3))
