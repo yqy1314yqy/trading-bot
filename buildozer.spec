@@ -14,6 +14,7 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE
 android.api = 33
 android.minapi = 26
 android.ndk = 27c
+p4a.local_recipes = p4a_recipes
 # android.gradle_dependencies =
 android.archs = arm64-v8a
 android.accept_sdk_license = True
