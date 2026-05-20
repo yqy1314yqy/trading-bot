@@ -5,24 +5,10 @@
 import time
 import json
 import threading
-import sys
-import types
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-
-# Android: cryptography's Rust _rust.abi3.so fails dlopen (missing _Py_NoneStruct)
-# ccxt only needs it for JWT auth (Coinbase etc.), not Binance HMAC
-for _m in ('cryptography', 'cryptography.hazmat', 'cryptography.hazmat.bindings',
-           'cryptography.hazmat.primitives', 'cryptography.hazmat.primitives.hashes',
-           'cryptography.hazmat.primitives.constant_time', 'cryptography.hazmat.backends',
-           'cryptography.exceptions', 'cryptography.x509', 'cryptography.utils'):
-    if _m not in sys.modules:
-        sys.modules[_m] = types.ModuleType(_m)
-sys.modules['cryptography'].__version__ = '0.0.0'
-del _m
-
 import ccxt
 from indicators import rsi, bbands, adx
 
