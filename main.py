@@ -348,6 +348,8 @@ class SettingsScreen(Screen):
         threading.Thread(target=self._do_test, daemon=True).start()
 
     def _do_test(self):
+        def _fail(msg):
+            Clock.schedule_once(lambda dt: self._show_test_result(False, msg), 0)
         try:
             import ccxt
             cfg = engine.load_config()
@@ -356,6 +358,7 @@ class SettingsScreen(Screen):
                 "secret": cfg["exchange"]["secret"],
                 "enableRateLimit": True,
                 "options": {"defaultType": "future"},
+                "timeout": 10000,
             }
             proxy = cfg["exchange"]["ccxt_config"]["proxies"].get("https", "")
             if proxy:
@@ -368,9 +371,7 @@ class SettingsScreen(Screen):
                 True, usdt.get("total", 0)
             ))
         except Exception as e:
-            Clock.schedule_once(lambda dt: self._show_test_result(
-                False, str(e)[:100]
-            ))
+            _fail(str(e)[:100])
 
     def _show_test_result(self, ok, info):
         if ok:
@@ -639,7 +640,9 @@ class TradingBotApp(App):
     def _update_status(self, status):
         if status == "running":
             self.status_dot.color = gc(C_GREEN)
-            self.status_text.text = "运行中"
+            cfg = engine.load_config()
+            has_api = bool(cfg.get("exchange", {}).get("key", "").strip())
+            self.status_text.text = "运行中 (实盘)" if has_api and engine.exchange else "运行中 (模拟)"
         else:
             self.status_dot.color = gc(C_RED)
             self.status_text.text = "已停止"
