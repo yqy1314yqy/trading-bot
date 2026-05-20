@@ -89,24 +89,28 @@ class TradingEngine:
         key = cfg["exchange"]["key"].strip()
         secret = cfg["exchange"]["secret"].strip()
 
-        if not key or not secret:
-            raise ValueError("API Key 和 Secret 未设置，请在设置页面填写")
-
         params = {
-            "apiKey": key,
-            "secret": secret,
+            "apiKey": key or None,
+            "secret": secret or None,
             "enableRateLimit": True,
             "options": {"defaultType": "future"},
         }
         proxy = cfg.get("exchange", {}).get("ccxt_config", {}).get("proxies", {}).get("https", "")
         if proxy:
             params["proxies"] = {"http": proxy, "https": proxy}
+
         self.exchange = ccxt.binance(params)
         self.exchange.load_markets()
-        self.log("交易所连接成功")
+        if key and secret:
+            self.log("交易所连接成功 (已认证)")
+        else:
+            self.log("交易所连接成功 (公开数据，无法交易)")
         return True
 
     def fetch_balance(self):
+        cfg = self.load_config()
+        if not cfg["exchange"]["key"].strip():
+            return 0
         try:
             bal = self.exchange.fetch_balance()
             return float(bal.get("USDT", {}).get("free", 0))

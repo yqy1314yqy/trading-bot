@@ -299,18 +299,6 @@ class SettingsScreen(Screen):
         )
         layout.add_widget(self.proxy)
 
-        # Dry run switch
-        switch_row = BoxLayout(
-            orientation="horizontal", size_hint_y=None, height=dp(44)
-        )
-        switch_row.add_widget(Label(
-            text="模拟交易 (Dry Run)", font_size=dp(14), color=gc(C_TEXT)
-        ))
-        self.dry_switch = Switch(active=True)
-        self.dry_switch.bind(active=self._on_dry)
-        switch_row.add_widget(self.dry_switch)
-        layout.add_widget(switch_row)
-
         # Save button
         save_btn = AppleButton(color=C_ACCENT, text="保存配置")
         save_btn.bind(on_release=lambda x: self.save())
@@ -328,15 +316,12 @@ class SettingsScreen(Screen):
         layout.add_widget(self.test_result)
 
         layout.add_widget(Label(
-            text="⚠ 请创建独立交易子账户 API\n仅开启「合约交易」，务必关闭「提现」",
+            text="请创建独立交易子账户 API\n仅开启合约交易，务必关闭提现",
             font_size=dp(12), color=gc(C_RED),
             size_hint_y=None, height=dp(40)
         ))
 
         self.add_widget(layout)
-
-    def _on_dry(self, instance, value):
-        pass
 
     def save(self):
         cfg = engine.load_config()
@@ -349,11 +334,14 @@ class SettingsScreen(Screen):
         cfg["exchange"]["ccxt_async_config"]["proxies"] = {
             "http": proxy, "https": proxy
         }
-        cfg["dry_run"] = self.dry_switch.active
         with open(CONFIG_PATH, "w") as f:
             json.dump(cfg, f, indent=4)
-        self.test_result.text = "✓ 配置已保存"
+        self.test_result.text = "配置已保存"
         self.test_result.color = gc(C_GREEN)
+        Clock.schedule_once(lambda dt: self._clear_msg(), 3)
+
+    def _clear_msg(self):
+        self.test_result.text = ""
 
     def test_connection(self):
         self.save()
@@ -399,7 +387,6 @@ class SettingsScreen(Screen):
             self.api_secret.text = cfg.get("exchange", {}).get("secret", "")
             proxy = cfg.get("exchange", {}).get("ccxt_config", {}).get("proxies", {})
             self.proxy.text = proxy.get("https", "")
-            self.dry_switch.active = cfg.get("dry_run", True)
         except Exception:
             pass
 
@@ -428,6 +415,92 @@ class LogsScreen(Screen):
 
     def update(self, logs):
         self.log_label.text = "\n".join(logs[-80:]) or "暂无日志"
+
+
+# ─── Simulation Screen ───
+class SimulationScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(name="simulation", **kw)
+        layout = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(14))
+
+        # Dry run
+        switch_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44))
+        switch_row.add_widget(Label(
+            text="模拟交易", font_size=dp(14), color=gc(C_TEXT)
+        ))
+        self.dry_switch = Switch(active=True)
+        switch_row.add_widget(self.dry_switch)
+        layout.add_widget(switch_row)
+
+        # Leverage
+        layout.add_widget(Label(text="杠杆倍数", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
+        self.leverage = TextInput(
+            text=str(STRATEGY_PARAMS["leverage"]), multiline=False,
+            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
+            foreground_color=gc(C_TEXT), font_size=dp(14)
+        )
+        layout.add_widget(self.leverage)
+
+        # Max trades
+        layout.add_widget(Label(text="最大同时持仓", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
+        self.max_trades = TextInput(
+            text=str(STRATEGY_PARAMS["max_trades"]), multiline=False,
+            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
+            foreground_color=gc(C_TEXT), font_size=dp(14)
+        )
+        layout.add_widget(self.max_trades)
+
+        # Stoploss
+        layout.add_widget(Label(text="止损比例 (负数)", font_size=dp(11), color=gc(C_TEXT2), size_hint_y=None, height=dp(16)))
+        self.stoploss = TextInput(
+            text=str(STRATEGY_PARAMS["stoploss"]), multiline=False,
+            size_hint_y=None, height=dp(46), background_color=gc(C_CARD),
+            foreground_color=gc(C_TEXT), font_size=dp(14)
+        )
+        layout.add_widget(self.stoploss)
+
+        # Save
+        save_btn = AppleButton(color=C_ACCENT, text="保存参数")
+        save_btn.bind(on_release=lambda x: self.save())
+        layout.add_widget(save_btn)
+
+        self.msg_label = Label(
+            text="", font_size=dp(13), size_hint_y=None, height=dp(40),
+            color=gc(C_TEXT2)
+        )
+        layout.add_widget(self.msg_label)
+
+        layout.add_widget(Label())
+
+        self.add_widget(layout)
+
+    def save(self):
+        cfg = engine.load_config()
+        cfg["dry_run"] = self.dry_switch.active
+        try:
+            STRATEGY_PARAMS["leverage"] = float(self.leverage.text)
+            STRATEGY_PARAMS["max_trades"] = int(self.max_trades.text)
+            STRATEGY_PARAMS["stoploss"] = float(self.stoploss.text)
+        except ValueError:
+            self.msg_label.text = "参数格式错误"
+            self.msg_label.color = gc(C_RED)
+            Clock.schedule_once(lambda dt: setattr(self.msg_label, 'text', ''), 3)
+            return
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(cfg, f, indent=4)
+        self.msg_label.text = "参数已保存"
+        self.msg_label.color = gc(C_GREEN)
+        Clock.schedule_once(lambda dt: setattr(self.msg_label, 'text', ''), 3)
+
+    def load(self):
+        try:
+            cfg = engine.load_config()
+            self.dry_switch.active = cfg.get("dry_run", True)
+            self.leverage.text = str(STRATEGY_PARAMS.get("leverage", 2))
+            self.max_trades.text = str(STRATEGY_PARAMS.get("max_trades", 3))
+            self.stoploss.text = str(STRATEGY_PARAMS.get("stoploss", -0.045))
+        except Exception:
+            pass
 
 
 # ─── Main App ───
@@ -463,9 +536,9 @@ class TradingBotApp(App):
             orientation="horizontal", spacing=dp(12),
             padding=[dp(16), dp(8)], size_hint_y=None, height=dp(56)
         )
-        self.start_btn = AppleButton(color=C_GREEN, text="▶  启动")
+        self.start_btn = AppleButton(color=C_GREEN, text="启动")
         self.start_btn.bind(on_release=lambda x: self._start())
-        self.stop_btn = AppleButton(color=C_RED, text="■  停止")
+        self.stop_btn = AppleButton(color=C_RED, text="停止")
         self.stop_btn.bind(on_release=lambda x: self._stop())
         self.stop_btn.background_color = gc(C_RED + "88")
         btn_row.add_widget(self.start_btn)
@@ -476,9 +549,11 @@ class TradingBotApp(App):
         self.sm = ScreenManager()
         self.dashboard = DashboardScreen()
         self.settings = SettingsScreen()
+        self.simulation = SimulationScreen()
         self.logs = LogsScreen()
         self.sm.add_widget(self.dashboard)
         self.sm.add_widget(self.settings)
+        self.sm.add_widget(self.simulation)
         self.sm.add_widget(self.logs)
         self.root.add_widget(self.sm)
 
@@ -492,7 +567,7 @@ class TradingBotApp(App):
             self.nav_rect = RoundedRectangle()
         nav.bind(pos=self._update_nav_bg, size=self._update_nav_bg)
 
-        for name, label in [("dashboard", "仪表盘"), ("settings", "设置"), ("logs", "日志")]:
+        for name, label in [("dashboard", "仪表盘"), ("simulation", "模拟"), ("settings", "设置"), ("logs", "日志")]:
             btn = Button(
                 text=label, font_size=dp(12), color=gc(C_ACCENT),
                 background_normal="", background_down="",
@@ -507,6 +582,7 @@ class TradingBotApp(App):
         # Timer
         Clock.schedule_interval(self._update_ui, 8)
         Clock.schedule_once(lambda dt: self.settings.load(), 1)
+        Clock.schedule_once(lambda dt: self.simulation.load(), 1)
 
         return self.root
 
