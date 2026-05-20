@@ -10,10 +10,19 @@ from kivy.utils import platform
 
 if platform == 'android':
     from kivy.config import Config
-    CJK_FONT = '/system/fonts/DroidSansFallbackBBK.ttf'
-    Config.set('kivy', 'default_font', [
-        'Roboto', CJK_FONT, CJK_FONT, CJK_FONT, CJK_FONT
-    ])
+    import os
+    _FONT_CANDIDATES = [
+        '/system/fonts/DroidSansFallbackBBK.ttf',  # vivo / BBK
+        '/system/fonts/NotoSansCJK-Regular.ttc',   # Samsung / generic
+        '/system/fonts/MiSans-Regular.ttf',        # Xiaomi
+        '/system/fonts/HarmonyOS_Sans_SC_Regular.ttf',  # Huawei
+        '/system/fonts/DroidSansFallback.ttf',     # older Android
+    ]
+    _font = next((f for f in _FONT_CANDIDATES if os.path.exists(f)), None)
+    if _font:
+        Config.set('kivy', 'default_font', [
+            'Roboto', _font, _font, _font, _font
+        ])
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
